@@ -82,3 +82,6 @@ app.delete("/trip/:id", (req, res) => {
 app.listen(8080, () => {
   console.log("Server listening on port 8080...");
 });
+
+// TODO Create and Update endpoints body validation with JOI
+// TODO Add an integer and an array as params in the apis
