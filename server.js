@@ -1,7 +1,7 @@
 const express = require("express");
-const mongo = require("mongodb").MongoClient;
-const url = "mongodb://localhost:27017";
+const url = "mongodb://localhost:27017/Validation";
 const app = express();
+const mongoose = require("mongoose");
 
 // Middleware for json responses
 app.use(express.json());
@@ -18,22 +18,14 @@ const runServer = () => {
 };
 
 // Connection to Mongo Client
-mongo.connect(
+
+mongoose.connect(
   url,
   {
     useNewUrlParser: true,
   },
-  (error, client) => {
-    if (error) {
-      console.log(error);
-      return;
-    }
-
-    /**
-     * Never add anything in global
-     */
-    global.mongoDB = client.db("Validation");
-
+  (error) => {
+    if (error) console.log(error.message);
     runServer();
   }
 );
