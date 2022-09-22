@@ -111,5 +111,3 @@ app.delete("/user/:id", (req, res) => {
 app.listen(8080, () => {
   console.log("Server listening on port 8080...");
 });
-
-// TODO Create and Update endpoints body validation with JOI
