@@ -1,10 +1,11 @@
 const express = require("express");
+const Joi = require("joi");
 const { ObjectId } = require("mongodb");
 const mongo = require("mongodb").MongoClient;
 const url = "mongodb://localhost:27017";
 const app = express();
 
-let db, trips;
+let db, users;
 
 // Middleware for json responses
 app.use(express.json());
@@ -20,26 +21,40 @@ mongo.connect(
       console.log(error);
       return;
     }
-    db = client.db("tripcost");
-    trips = db.collection("trips");
+    db = client.db("Validation");
+    users = db.collection("users");
   }
 );
 
-// Get all trips
-app.get("/trips", (req, res) => {
-  trips.find().toArray((err, items) => {
+// Get all users
+app.get("/users", (req, res) => {
+  users.find().toArray((err, items) => {
     if (err) {
       res.status(500).json({ error: err });
       return;
     }
-    res.status(200).json({ trips: items });
+    res.status(200).json({ users: items });
   });
 });
 
-// Insert a new trip
-app.post("/trip", (req, res) => {
-  const name = req.body.name;
-  trips.insertOne({ name: name }, (err, result) => {
+// Insert a new user
+app.post("/user", (req, res) => {
+  const data = req.body;
+
+  const schema = Joi.object().keys({
+    name: Joi.string().required(),
+    age: Joi.number().integer().min(1).max(200),
+    cars: Joi.array().items(Joi.string()),
+  });
+
+  const { value, error } = schema.validate(data);
+  console.log(value);
+  if (error) {
+    res.json(error);
+    return;
+  }
+
+  users.insertOne(value, (err, result) => {
     if (err) {
       console.error(err);
       res.status(500).json({ err: err });
@@ -50,12 +65,26 @@ app.post("/trip", (req, res) => {
   });
 });
 
-// Update a previous trip by Id
-app.put("/trip/:id", (req, res) => {
-  trips.updateOne(
+// Update a previous user by Id
+app.put("/user/:id", (req, res) => {
+  const data = req.body;
+  const schema = Joi.object().keys({
+    name: Joi.string().required(),
+    age: Joi.number().integer().min(1).max(200),
+    cars: Joi.array().items(Joi.string()),
+  });
+
+  const { value, error } = schema.validate(data);
+  console.log(value);
+  if (error) {
+    res.json(error);
+    return;
+  }
+
+  users.updateOne(
     { _id: ObjectId(req.params.id) },
-    { $set: { name: req.body.name } },
-    (error, result) => {
+    { $set: value },
+    (error) => {
       if (error) {
         res.status(500).json({ error: error });
         return;
@@ -65,9 +94,9 @@ app.put("/trip/:id", (req, res) => {
   );
 });
 
-// Delete a previous trip by Id
-app.delete("/trip/:id", (req, res) => {
-  trips.deleteOne({ _id: ObjectId(req.params.id) }, (error, result) => {
+// Delete a previous user by Id
+app.delete("/user/:id", (req, res) => {
+  users.deleteOne({ _id: ObjectId(req.params.id) }, (error, result) => {
     if (error) {
       console.log(error);
       res.status(500).json({ error: error });
@@ -84,4 +113,3 @@ app.listen(8080, () => {
 });
 
 // TODO Create and Update endpoints body validation with JOI
-// TODO Add an integer and an array as params in the apis
