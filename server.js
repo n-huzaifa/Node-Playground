@@ -1,31 +1,30 @@
-const express = require("express");
-const url = "mongodb://localhost:27017/Validation";
-const app = express();
 const mongoose = require("mongoose");
+const express = require("express");
+const app = express();
+require("dotenv").config();
 
-// Middleware for json responses
-app.use(express.json());
+const DB_URI = process.env.MONGO_DB_URI;
 
-const runServer = () => {
+function RunServer() {
   const routes = require("./routes");
-
   app.use("/api", routes);
+  app.use(express.json());
 
-  // listen to port 8080
-  app.listen(8080, () => {
-    console.log("Server listening on port 8080...");
+  app.listen("8080", () => {
+    console.log("Server is listening at port 8080...");
   });
-};
+}
 
-// Connection to Mongo Client
+mongoose
+  .connect(DB_URI, { useNewUrlParser: true })
+  .then(() => {
+    RunServer();
+    console.log("Database connected.");
+  })
+  .catch((error) => {
+    console.log("Database connection failed");
+    console.log(error.message);
+  });
 
-mongoose.connect(
-  url,
-  {
-    useNewUrlParser: true,
-  },
-  (error) => {
-    if (error) console.log(error.message);
-    runServer();
-  }
-);
+// TODO
+//! APi not receiving a body
