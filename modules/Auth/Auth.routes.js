@@ -1,6 +1,7 @@
 const router = require("express").Router();
-const { signupController: signupController } = require("./Auth.controller.js");
+const { signupController, loginController } = require("./Auth.controller.js");
 
 router.post("/signup", signupController);
+router.post("/login", loginController);
 
 module.exports = router;

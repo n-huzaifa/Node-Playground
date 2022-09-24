@@ -1,18 +1,24 @@
 const User = require("../../model/users");
-const { signupValidation } = require("./Auth.validation");
+const { signupValidation, loginValidation } = require("./Auth.validation");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+
+function safeUserModel(user) {
+  const safeData = user;
+  delete safeData.password;
+  return safeData;
+}
 
 async function signupController(req, res) {
   try {
     const data = req.body;
 
-    const { value, error } = signupValidation.validate(data);
+    const { value, error } = signupValidation.validate(data || {});
     if (error) {
       res.status(500).json({ error: error.details });
     }
     const { first_name, last_name, email, password } = value;
-    const userAlreadyExists = User.findOne({ email });
+    const userAlreadyExists = await User.findOne({ email });
 
     if (userAlreadyExists) {
       return res.status(409).send("User Already Exist. Please Login");
@@ -29,18 +35,69 @@ async function signupController(req, res) {
 
     const token = jwt.sign(
       { user_id: user._id, email },
-      process.env.TOKEN_KEY,
-      {
-        expiresIn: "2h",
-      }
+      process.env.AUTH_TOKEN_SECRET
     );
-    // save user token
-    user.token = token;
 
-    res.status(201).json(user);
+    // safe datA
+    const safeData = safeUserModel(user.toObject());
+
+    // save user token
+    safeData.token = token;
+
+    res.status(201).json(safeData);
   } catch (error) {
     console.log(error.message);
+    res.status(500).json({ error: error.message });
   }
 }
 
-module.exports = { signupController };
+async function loginController(req, res) {
+  try {
+    console.log("login 1");
+    const data = req.body;
+
+    const { value, error } = loginValidation.validate(data);
+    if (error) {
+      res.status(500).json({ error: error.details });
+      return;
+    }
+    const { email, password } = value;
+
+    const userExists = await User.findOne({ email });
+
+    if (!userExists) {
+      res
+        .status(401)
+        .json({ error: "No user exists with this email. First signup!" });
+      return;
+    }
+
+    const passMatch = await bcrypt.compare(password, userExists.password);
+
+    if (!passMatch) {
+      res.status(500).json({ error: "Invalid Credentials" });
+      return;
+    }
+
+    const token = jwt.sign(
+      {
+        userId: userExists._id,
+        email,
+      },
+      process.env.AUTH_TOKEN_SECRET
+    );
+
+    userExists.token = token;
+
+    const user = safeUserModel(userExists.toObject());
+    res.status(200).json(user);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+module.exports = {
+  signupController,
+  loginController,
+};
