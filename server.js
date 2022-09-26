@@ -3,7 +3,7 @@ const express = require("express");
 const routes = require("./routes");
 const mongoose = require("mongoose");
 const auth = require("./middleware/auth");
-const roleAccess = require("./middleware/roleAccess");
+const roleAccess = require("./middleware/role");
 
 const app = express();
 const DB_URI = process.env.MONGO_DB_URI;
@@ -25,7 +25,7 @@ app.get("/alpha", auth, roleAccess("Alpha"), (req, res) => {
   res.status(200).send("Welcome alpha🙌 ");
 });
 
-app.get("/beta", auth, roleAccess("Beta"), (req, res, next) => {
+app.get("/beta", auth, roleAccess("Beta"), (req, res) => {
   res.status(200).send("Welcome beta🙌 ");
 });
 
