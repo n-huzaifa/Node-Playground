@@ -1,5 +1,4 @@
 const User = require("../../model/users");
-const { signupValidation, loginValidation } = require("./Auth.validation");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -13,11 +12,7 @@ async function signupController(req, res) {
   try {
     const data = req.body;
 
-    const { value, error } = signupValidation.validate(data || {});
-    if (error) {
-      res.status(500).json({ error: error.details });
-    }
-    const { first_name, last_name, email, password } = value;
+    const { first_name, last_name, email, password } = data;
     const userAlreadyExists = await User.findOne({ email });
 
     if (userAlreadyExists) {
@@ -53,15 +48,9 @@ async function signupController(req, res) {
 
 async function loginController(req, res) {
   try {
-    console.log("login 1");
     const data = req.body;
 
-    const { value, error } = loginValidation.validate(data);
-    if (error) {
-      res.status(500).json({ error: error.details });
-      return;
-    }
-    const { email, password } = value;
+    const { email, password } = data;
 
     const userExists = await User.findOne({ email });
 
