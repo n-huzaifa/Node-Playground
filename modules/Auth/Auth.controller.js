@@ -11,7 +11,8 @@ function safeUserModel(user) {
 async function signupController(req, res) {
   try {
     const data = req.body;
-
+    const ROLES = ["Alpha", "Beta"];
+    const randomRole = ROLES[Math.floor(Math.random() * 2)];
     const { first_name, last_name, email, password } = data;
     const userAlreadyExists = await User.findOne({ email });
 
@@ -26,10 +27,11 @@ async function signupController(req, res) {
       last_name,
       email: email.toLowerCase(), // sanitize: convert email to lowercase
       password: encryptedPassword,
+      role: randomRole,
     });
 
     const token = jwt.sign(
-      { user_id: user._id, email },
+      { user_id: user._id, email, randomRole },
       process.env.AUTH_TOKEN_SECRET
     );
 
@@ -72,6 +74,7 @@ async function loginController(req, res) {
       {
         userId: userExists._id,
         email,
+        role: userExists.role,
       },
       process.env.AUTH_TOKEN_SECRET
     );

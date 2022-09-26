@@ -13,6 +13,7 @@ function verifyToken(req, res, next) {
   try {
     const decoded = jwt.verify(token, config.AUTH_TOKEN_SECRET);
     req.user = decoded;
+    console.log(decoded);
   } catch (error) {
     return res.status(401).json({ error: error });
   }
